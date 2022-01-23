@@ -1,0 +1,58 @@
+CC = mpic++
+CPPFLAGS = -Wall -Wextra
+CXXFLAGS = -O2 -std=c++11 -pthread -I /home/damika/boost-1.78.0/built/include  -L/home/damika/boost-1.78.0/built/lib -lboost_thread -lboost_system
+RM = rm
+
+# Path to sparsehash src
+USER_LIBS = -I /home/damika/cloud-97/programs/sparsehash-sparsehash-2.0.4/src 
+
+main: main.o extractor.o com.o kmer_dump.o utils.hpp MurmurHash2.o thread_safe_queue.o counter.o writer.o file_reader.o
+	$(CC) $(CXXFLAGS) $(CPPFLAGS) -o kmer_counter.out main.o extractor.o com.o kmer_dump.o MurmurHash2.o thread_safe_queue.o counter.o writer.o file_reader.o $(USER_LIBS)
+
+main.o: main.cpp extractor.hpp com.hpp kmer_dump.hpp utils.hpp counter.hpp thread_safe_queue.hpp writer.hpp file_reader.hpp
+	$(CC) $(CXXFLAGS) $(CPPFLAGS) -c main.cpp $(USER_LIBS)
+
+extractor.o: extractor.cpp extractor.hpp utils.hpp
+	$(CC) $(CXXFLAGS) $(CPPFLAGS) -c extractor.cpp $(USER_LIBS)
+
+com.o: com.cpp com.hpp utils.hpp
+	$(CC) $(CXXFLAGS) $(CPPFLAGS) -c com.cpp $(USER_LIBS)
+
+writer.o: writer.cpp writer.hpp utils.hpp kmer_dump.hpp
+	$(CC) $(CXXFLAGS) $(CPPFLAGS) -c writer.cpp $(USER_LIBS)
+
+thread_safe_queue.o: thread_safe_queue.cpp
+	$(CC) $(CXXFLAGS) $(CPPFLAGS) -c thread_safe_queue.cpp $(USER_LIBS)
+
+counter.o: counter.cpp thread_safe_queue.hpp
+	$(CC) $(CXXFLAGS) $(CPPFLAGS) -c counter.cpp $(USER_LIBS)
+
+finalizer: finalizer.o MurmurHash2.o kmer_dump.o utils.hpp
+	$(CC) $(CXXFLAGS) $(CPPFLAGS) -o finalizer.out finalizer.o kmer_dump.o MurmurHash2.o $(USER_LIBS)
+
+finalizer.o: finalizer.cpp kmer_dump.hpp utils.hpp
+	$(CC) $(CXXFLAGS) $(CPPFLAGS) -c finalizer.cpp $(USER_LIBS)
+
+kmer_dump.o: kmer_dump.cpp kmer_dump.hpp utils.hpp
+	$(CC) $(CXXFLAGS) $(CPPFLAGS) -c kmer_dump.cpp $(USER_LIBS)
+
+MurmurHash2.o: MurmurHash2.cpp MurmurHash2.hpp
+	$(CC) $(CXXFLAGS) $(CPPFLAGS) -c MurmurHash2.cpp $(USER_LIBS)
+
+file_reader.o: file_reader.cpp file_reader.hpp extractor.hpp utils.hpp
+	$(CC) $(CXXFLAGS) $(CPPFLAGS) -c file_reader.cpp $(USER_LIBS)
+
+kmer_encoder: distributor.o encoder.o encoder_writer.o extractor.o utils.hpp MurmurHash2.o thread_safe_queue.o file_reader.o
+	$(CC) $(CXXFLAGS) $(CPPFLAGS) -o kmer_encoder.out distributor.o encoder.o encoder_writer.o extractor.o MurmurHash2.o thread_safe_queue.o file_reader.o $(USER_LIBS)
+
+distributor.o: distributor.cpp utils.hpp thread_safe_queue.hpp file_reader.hpp encoder.hpp encoder_writer.hpp
+	$(CC) $(CXXFLAGS) $(CPPFLAGS) -c distributor.cpp $(USER_LIBS)
+
+encoder.o: encoder.cpp thread_safe_queue.hpp
+	$(CC) $(CXXFLAGS) $(CPPFLAGS) -c encoder.cpp $(USER_LIBS)
+
+encoder_writer.o: encoder_writer.cpp encoder_writer.hpp utils.hpp kmer_dump.hpp
+	$(CC) $(CXXFLAGS) $(CPPFLAGS) -c encoder_writer.cpp $(USER_LIBS)
+
+clean: 
+	$(RM) *.o kmer_counter.out finalizer.out kmer_encoder.out
